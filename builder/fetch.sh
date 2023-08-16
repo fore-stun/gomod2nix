@@ -2,6 +2,8 @@ source $stdenv/setup
 
 export HOME=$(mktemp -d)
 
+echo "========== $goPackagePath@$version"
+
 # Call once first outside of subshell for better error reporting
 go mod download "$goPackagePath@$version"
 

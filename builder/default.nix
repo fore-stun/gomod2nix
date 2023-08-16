@@ -51,7 +51,7 @@ let
     , goPackagePath
     , version
     , go
-    , nativeBuildInputs
+    , nativeBuildInputs ? []
     }:
     stdenvNoCC.mkDerivation {
       name = "${baseNameOf goPackagePath}_${version}";
@@ -93,12 +93,12 @@ let
         if goMod != null then commands else [ ];
 
       sources = mapAttrs
-        (goPackagePath: meta: lib.debug.traceSeq meta (fetchGoModule {
+        (goPackagePath: meta: fetchGoModule {
           goPackagePath = meta.replaced or goPackagePath;
           inherit (meta) version hash;
           inherit go;
-          nativeBuildInputs = ({ nativeBuildInputs ? [], ... }: nativeBuildInputs) meta;
-        }))
+          nativeBuildInputs = if meta ? "nativeBuildInputs" then meta.nativeBuildInputs else [];
+        })
         modulesStruct.mod;
     in
     runCommand "vendor-env"
@@ -168,7 +168,7 @@ let
     }@attrs:
     let
       goMod = parseGoMod (readFile "${toString pwd}/go.mod");
-      modulesStruct = import modules;
+      modulesStruct = import modules { inherit lib; pkgs = pkgsBuildBuild; }; # TODO what else to pass down
 
       go = selectGo attrs goMod;
 
