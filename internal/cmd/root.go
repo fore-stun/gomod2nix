@@ -58,9 +58,9 @@ func generateFunc(cmd *cobra.Command, args []string) {
 		outDir = directory
 	}
 
-	// Write gomod2nix.toml
+	// Write gomod2nix.nix
 	{
-		goMod2NixPath := filepath.Join(outDir, "gomod2nix.toml")
+		goMod2NixPath := filepath.Join(outDir, "gomod2nix.nix")
 		outFile := goMod2NixPath
 		pkgs, err := generate.GeneratePkgs(directory, goMod2NixPath, maxJobs)
 		if err != nil {
@@ -96,7 +96,7 @@ var rootCmd = &cobra.Command{
 
 var generateCmd = &cobra.Command{
 	Use:   "generate",
-	Short: "Run gomod2nix.toml generator",
+	Short: "Run gomod2nix.nix generator",
 	Run:   generateFunc,
 }
 

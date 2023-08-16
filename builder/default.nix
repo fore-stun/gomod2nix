@@ -51,6 +51,7 @@ let
     , goPackagePath
     , version
     , go
+    , nativeBuildInputs
     }:
     stdenvNoCC.mkDerivation {
       name = "${baseNameOf goPackagePath}_${version}";
@@ -60,7 +61,7 @@ let
         go
         jq
         cacert
-      ];
+      ] ++ nativeBuildInputs;
       outputHashMode = "recursive";
       outputHashAlgo = null;
       outputHash = hash;
@@ -92,11 +93,12 @@ let
         if goMod != null then commands else [ ];
 
       sources = mapAttrs
-        (goPackagePath: meta: fetchGoModule {
+        (goPackagePath: meta: lib.debug.traceSeq meta (fetchGoModule {
           goPackagePath = meta.replaced or goPackagePath;
           inherit (meta) version hash;
           inherit go;
-        })
+          nativeBuildInputs = ({ nativeBuildInputs ? [], ... }: nativeBuildInputs) meta;
+        }))
         modulesStruct.mod;
     in
     runCommand "vendor-env"
@@ -162,11 +164,11 @@ let
   mkGoEnv =
     { pwd
     , toolsGo ? pwd + "/tools.go"
-    , modules ? pwd + "/gomod2nix.toml"
+    , modules ? pwd + "/gomod2nix.nix"
     }@attrs:
     let
       goMod = parseGoMod (readFile "${toString pwd}/go.mod");
-      modulesStruct = fromTOML (readFile modules);
+      modulesStruct = import modules;
 
       go = selectGo attrs goMod;
 
@@ -175,7 +177,7 @@ let
       };
 
     in
-    stdenv.mkDerivation (removeAttrs attrs [ "pwd" ] // {
+      lib.debug.traceSeq goMod (stdenv.mkDerivation (removeAttrs attrs [ "pwd" ] // {
       name = "${baseNameOf goMod.module}-env";
 
       dontUnpack = true;
@@ -214,10 +216,10 @@ let
 
         ${internal.install}
       '';
-    });
+      }));
 
   buildGoApplication =
-    { modules ? pwd + "/gomod2nix.toml"
+    { modules ? pwd + "/gomod2nix.nix"
     , src ? pwd
     , pwd ? null
     , nativeBuildInputs ? [ ]
@@ -234,7 +236,7 @@ let
     , ...
     }@attrs:
     let
-      modulesStruct = if modules == null then { } else fromTOML (readFile modules);
+      modulesStruct = if modules == null then { } else import modules { inherit lib; pkgs = pkgsBuildBuild; }; # TODO what else to pass down
 
       goModPath = "${toString pwd}/go.mod";
 

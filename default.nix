@@ -13,7 +13,7 @@ buildGoApplication {
   pname = "gomod2nix";
   version = "dev";
 
-  modules = ./gomod2nix.toml;
+  modules = ./gomod2nix.nix;
 
   src = lib.cleanSourceWith {
     filter = name: type: builtins.foldl' (v: s: v && ! lib.hasSuffix s name) true [
