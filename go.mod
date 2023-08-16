@@ -3,7 +3,6 @@ module github.com/nix-community/gomod2nix
 go 1.17
 
 require (
-	github.com/BurntSushi/toml v1.1.0
 	github.com/nix-community/go-nix v0.0.0-20220612195009-5f5614f7ca47
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/cobra v1.4.0
